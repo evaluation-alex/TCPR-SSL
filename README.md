@@ -1,8 +1,24 @@
-This folder contains various sources for utilities for use with the data
-collector component of gridcloud.
+This folder contains sources for TCPR with support for SSL.
 
-The main application is the data collector itself, dc, which is a
-backward-compatible substitute for the previous dc.py:
+TCPR, also available from <http://github.com/rahpaere/tcpr/>, is middleware
+that enables application-driven TCP migration and recovery.  The
+setup-network script uses features available in recent Linux kernels
+to create a virtual network, and setup-tcpr installs firewall rules to
+protect all TCP connections to one of the nodes; they can be used as
+examples for using TCPR with dc.
+
+Install the OpenSSL library. This library has a custom memory
+allocation function in the file crypto/mem.c. This function allocates
+a big chunk of memory for the first time and then for the subequent
+requests, it allocates memory from the same block. This is helpful
+in taking the backup of SSL state which is required in failsafe
+recovery of the application.  Change the /crypto/mem.c file to use
+the custom malloc function.  Please do not forget to install libssl
+package for SSL library headers.
+
+We provide an example application, dc for "data collector", and this is
+used in the context of the GridControl project (jointly with WSU).
+Usage:
 
 	dc [args] src-ip src-port stream-id dst-ip dst-port
 		Optional arguments:
@@ -15,28 +31,12 @@ with SSL. It sends the stream-id to the source, and then copies all
 data it receives from the source to the destination.  It protects its
 connection to the source with TCPR.
 
-TCPR, available from <http://github.com/rahpaere/tcpr/>, is middleware
-that enables application-driven TCP migration and recovery.  The
-setup-network script uses features available in recent Linux kernels
-to create a virtual network, and setup-tcpr installs firewall rules to
-protect all TCP connections to one of the nodes; they can be used as
-examples for using TCPR with dc.
-
 When a data collector starts up, it requests the latest state from
 TCPR, and, if a non-failed connection is present, the data collector
 connects directly to the master and waits for it to die.  The current
 implementation uses TCPR and detects failure in such a way as to be
 completely safe in the face of a data collector process failing, but
 for simplicity it does not check for network stack or TCPR failure.
-
-Install the OpenSSL library. This library has a custom memory
-allocation function in the file crypto/mem.c. This function allocates
-a big chunk of memory for the first time and then for the subequent
-requests, it allocates memory from the same block. This is helpful
-in taking the backup of SSL state which is required in failsafe
-recovery of the application.  Change the /crypto/mem.c file to use
-the custom malloc function.  Please do not forget to install libssl
-package for SSL library headers.
 
 To demonstrate the data collector,  we have included two other apps:
 
